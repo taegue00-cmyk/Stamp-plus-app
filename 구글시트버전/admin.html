@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="robots" content="noindex">
+<title>브릿지 스탬프 - 사장님 전용</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; justify-content: center;
+    font-family: 'Gowun Dodum', '고운 돋움', 'Malgun Gothic', '맑은 고딕', sans-serif;
+    color: #3b2f4a;
+    background: linear-gradient(135deg, #ffd6e0 0%, #ffe9c7 45%, #c9e7ff 100%) fixed;
+  }
+  .app { width: 100%; max-width: 440px; padding: 24px 16px 40px; }
+  .shop { text-align: center; font-size: 26px; font-weight: bold; margin: 0; }
+  .guide { text-align: center; font-size: 15px; opacity: .75; margin: 6px 0 18px; }
+  .card {
+    background: rgba(255,255,255,.45);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,.7);
+    border-radius: 24px; padding: 18px; margin-bottom: 14px;
+    box-shadow: 0 8px 28px rgba(120,90,160,.18);
+  }
+  label { display: block; font-size: 16px; margin: 0 0 8px 4px; }
+  input {
+    width: 100%; padding: 16px; font: inherit; font-size: 28px; letter-spacing: 10px; text-align: center;
+    color: inherit; border: 1px solid rgba(255,255,255,.8); border-radius: 18px;
+    background: rgba(255,255,255,.7); outline: none; margin-bottom: 12px;
+  }
+  input:focus { box-shadow: 0 0 0 3px rgba(255,140,170,.4); }
+  .btn {
+    display: block; width: 100%; padding: 22px 10px; font: inherit; font-size: 26px; font-weight: bold;
+    color: #fff; cursor: pointer; border: none; border-radius: 22px; margin-bottom: 12px;
+    background: linear-gradient(135deg, #ff8fb1, #ffb27a);
+    box-shadow: 0 6px 16px rgba(255,120,150,.35);
+  }
+  .btn:active { transform: scale(.98); }
+  .btn.cancel { background: rgba(255,255,255,.8); color: #3b2f4a; box-shadow: 0 4px 12px rgba(120,90,160,.2); font-size: 22px; padding: 18px 10px; }
+  .btn.done { background: linear-gradient(135deg, #5ec9a5, #7fd8be); box-shadow: 0 6px 16px rgba(80,190,150,.4); }
+  .btn.small { font-size: 16px; padding: 12px; font-weight: normal; margin-bottom: 0; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .msg { text-align: center; font-size: 17px; min-height: 24px; margin: 4px 0 8px; }
+  .msg.bad { color: #b00020; font-weight: bold; }
+  .name { text-align: center; font-size: 22px; font-weight: bold; }
+  .big { text-align: center; font-size: 40px; font-weight: bold; margin: 6px 0; }
+  .board { display: grid; gap: 4px; margin: 12px 0; }
+  .dot {
+    aspect-ratio: 1; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.55); border: 2px dashed rgba(180,150,200,.6);
+    font-size: 11px; color: rgba(90,70,110,.55);
+  }
+  .dot.full {
+    border: 2px solid #fff; color: #fff; font-size: 15px;
+    background: linear-gradient(135deg, #ff8fb1, #ffb27a);
+    box-shadow: 0 3px 8px rgba(255,120,150,.4);
+  }
+  .alert {
+    text-align: center; font-size: 22px; font-weight: bold; padding: 16px; border-radius: 18px;
+    background: rgba(255,238,150,.9); margin: 10px 0; animation: pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { transform: scale(1.03); } }
+  .warn { background: rgba(255,230,200,.7); border-radius: 16px; padding: 10px 12px; font-size: 14px; line-height: 1.5; margin-bottom: 12px; }
+  .today { text-align: center; font-size: 20px; }
+  .today b { font-size: 30px; color: #e0527f; }
+  .hidden { display: none !important; }
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 20;
+    padding: 10px 20px; border-radius: 18px; font-size: 17px; background: rgba(255,255,255,.92);
+    box-shadow: 0 6px 18px rgba(60,40,80,.25);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1 class="shop">🌸 브릿지 스탬프</h1>
+  <div class="guide">사장님 전용 화면</div>
+
+  <!-- 잠금 -->
+  <div class="card" id="lockCard">
+    <h2 style="margin:0 0 10px;font-size:20px">비밀번호를 넣어 주세요</h2>
+    <div class="warn">사장님만 들어갈 수 있어요. 5번 틀리면 10분 동안 잠겨요.</div>
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+    <button class="btn" id="pinOk">들어가기</button>
+    <div class="msg" id="pinMsg"></div>
+  </div>
+
+  <!-- 메인 -->
+  <div id="main" class="hidden">
+    <div class="card">
+      <label for="phone">손님 휴대폰 번호 뒷 4자리</label>
+      <input id="phone" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+      <button class="btn" id="addBtn">적립 (+1)</button>
+      <button class="btn cancel" id="undoBtn">취소 (-1)</button>
+      <button class="btn small cancel" id="peekBtn">현재 개수 보기</button>
+      <div class="msg" id="msg"></div>
+    </div>
+
+    <div class="card hidden" id="result">
+      <div class="name" id="rName"></div>
+      <div class="big" id="rCount"></div>
+      <div class="board" id="rBoard"></div>
+      <div class="alert hidden" id="rAlert">🎁 무료 음료 제공 대상입니다</div>
+      <button class="btn done hidden" id="doneBtn">사용 완료 (0개로)</button>
+    </div>
+
+    <div class="card today">오늘 적립한 횟수 <b id="todayNum">0</b>번</div>
+
+    <div class="card">
+      <button class="btn small cancel" id="changePin">비밀번호 바꾸기</button>
+      <div class="msg" id="pinChangeMsg"></div>
+      <button class="btn small cancel" id="lockBtn">🔒 잠그기</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+  // 구글 시트 "심부름꾼"의 주소를 아래 따옴표 안에 붙여 넣어요. (설정방법.md 참고)
+  var API_URL = '여기에_구글_주소를_붙여_넣으세요';
+
+  var pin = '';              // 비밀번호는 이 화면이 켜져 있는 동안만 기억해요 (저장하지 않아요)
+  var busy = false;
+  var shownLast4 = null;     // 지금 결과 칸에 보이는 손님
+  var goalNow = 10;
+
+  function $(id) { return document.getElementById(id); }
+  function onlyDigits(e) { e.value = e.value.replace(/\D/g, '').slice(0, 4); }
+
+  // ---------- 구글 시트와 이야기하기 ----------
+  function api(body) {
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 20000);
+    return fetch(API_URL, { method: 'POST', body: JSON.stringify(body), signal: ctrl.signal })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { clearTimeout(timer); return j; }, function (e) { clearTimeout(timer); throw e; });
+  }
+
+  var toastTimer = null;
+  function toast(text) {
+    var t = $('toast');
+    t.textContent = text; t.className = 'toast';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.className = 'toast hidden'; }, 1500);
+  }
+  function say(text, bad) { var m = $('msg'); m.textContent = text; m.className = 'msg' + (bad ? ' bad' : ''); }
+
+  function setBusy(b) {
+    busy = b;
+    $('undoBtn').disabled = b; $('peekBtn').disabled = b; $('doneBtn').disabled = b;
+    updateAddBtn();
+  }
+  function updateAddBtn() { $('addBtn').disabled = busy || !/^\d{4}$/.test($('phone').value); }
+
+  var NET_FAIL = '인터넷이 불안정해요. 저장됐는지 모르니 "현재 개수 보기"를 눌러 꼭 확인해 주세요.';
+
+  // 한 번의 요청을 보내고, 결과에 따라 화면을 바꿔요.
+  function send(body, okMsg, onDone) {
+    if (API_URL.indexOf('https://') !== 0) { say('아직 구글 시트가 연결되지 않았어요. 설정방법을 먼저 해 주세요.', true); return; }
+    setBusy(true); say('처리 중이에요…');
+    api(body).then(function (res) {
+      handle(res, body, okMsg);
+    }, function () {
+      say(NET_FAIL, true);
+    }).then(function () { setBusy(false); if (onDone) onDone(); });
+  }
+
+  function handle(res, body, okMsg) {
+    if (res && res.ok) {
+      if (body.action === 'lookup') res.last4 = body.last4;
+      if (res.last4) render(res);
+      if (typeof res.today === 'number') $('todayNum').textContent = res.today;
+      say(okMsg || ''); if (body.action !== 'lookup') toast('저장됨 ✓');
+      return;
+    }
+    var code = res && res.code, i = res && res.info;
+    if (code === 'BAD_PIN') { relock('비밀번호가 달라요. 다시 들어가 주세요.'); return; }
+    if (code === 'LOCKED') { relock('비밀번호를 여러 번 틀려서 ' + res.minutes + '분 동안 잠겼어요.'); return; }
+    if (code === 'NO_SETUP') { relock('구글 시트 설정이 끝나지 않았어요. 설정방법의 4번까지 해 주세요.'); return; }
+    if (code === 'RECENT') {
+      // 방금 적립한 손님이면 한 번 더 물어봐요
+      if (confirm('방금 적립했습니다. 계속할까요?')) {
+        var again = JSON.parse(JSON.stringify(body)); again.force = true;
+        send(again, '적립했어요! ✅');
+      } else { render(i); say('적립하지 않았어요.'); }
+      return;
+    }
+    if (i) render(i);
+    if (code === 'FULL') say('이미 다 모은 손님이에요. 먼저 "사용 완료"를 눌러 주세요.', true);
+    else if (code === 'ZERO') say('뺄 스탬프가 없어요.', true);
+    else if (code === 'NOT_FOUND') say('이 번호의 손님이 없어요.', true);
+    else if (code === 'NOT_FULL') say('아직 다 모으지 않았어요.', true);
+    else say('처리하지 못했어요. 잠시 후 다시 해 주세요.', true);
+  }
+
+  // ---------- 화면 그리기 ----------
+  function render(r) {
+    goalNow = r.goal || goalNow;
+    shownLast4 = r.last4;
+    $('rName').textContent = (r.nick ? r.nick + ' · ' : '') + '뒷자리 ' + r.last4;
+    $('rCount').textContent = '지금 ' + r.stamps + ' / ' + goalNow + '개';
+    var b = $('rBoard'); b.textContent = '';
+    b.style.gridTemplateColumns = 'repeat(' + Math.min(goalNow, 10) + ', 1fr)';
+    for (var i = 1; i <= goalNow; i++) {
+      var d = document.createElement('div');
+      d.className = 'dot' + (i <= r.stamps ? ' full' : '');
+      d.textContent = i <= r.stamps ? '★' : String(i);
+      b.appendChild(d);
+    }
+    var full = r.stamps >= goalNow;
+    $('rAlert').textContent = '🎁 ' + (r.reward || '무료 음료') + ' 제공 대상입니다';
+    $('rAlert').classList.toggle('hidden', !full);
+    $('doneBtn').classList.toggle('hidden', !full);
+    $('result').classList.remove('hidden');
+  }
+  function clearResult() { shownLast4 = null; $('result').classList.add('hidden'); say(''); }
+
+  // ---------- 잠금 ----------
+  function relock(text) {
+    pin = ''; shownLast4 = null;
+    $('main').classList.add('hidden'); $('lockCard').classList.remove('hidden');
+    $('pinInput').value = ''; $('pinMsg').textContent = text || '';
+  }
+  $('pinInput').oninput = function () { onlyDigits(this); };
+  $('pinInput').onkeydown = function (e) { if (e.key === 'Enter') $('pinOk').click(); };
+  $('pinOk').onclick = function () {
+    if (busy) return;
+    var v = $('pinInput').value;
+    if (!/^\d{4}$/.test(v)) { $('pinMsg').textContent = '숫자 4개를 넣어 주세요.'; return; }
+    if (API_URL.indexOf('https://') !== 0) { $('pinMsg').textContent = '아직 구글 시트가 연결되지 않았어요. 설정방법을 먼저 해 주세요.'; return; }
+    busy = true; $('pinOk').disabled = true; $('pinMsg').textContent = '확인하는 중이에요…';
+    api({ action: 'login', pin: v }).then(function (res) {
+      if (res && res.ok) {
+        pin = v; goalNow = res.goal || 10;
+        $('lockCard').classList.add('hidden'); $('main').classList.remove('hidden');
+        $('todayNum').textContent = res.today || 0;
+        $('phone').value = ''; clearResult(); updateAddBtn(); $('pinMsg').textContent = '';
+      } else if (res && res.code === 'LOCKED') {
+        $('pinMsg').textContent = '여러 번 틀려서 ' + res.minutes + '분 동안 잠겼어요.';
+      } else if (res && res.code === 'NO_SETUP') {
+        $('pinMsg').textContent = '구글 시트 설정이 끝나지 않았어요. 설정방법의 4번까지 해 주세요.';
+      } else {
+        $('pinMsg').textContent = '비밀번호가 달라요.'; $('pinInput').value = '';
+      }
+    }, function () {
+      $('pinMsg').textContent = '인터넷이 불안정해요. 잠시 후 다시 해 주세요.';
+    }).then(function () { busy = false; $('pinOk').disabled = false; });
+  };
+  $('lockBtn').onclick = function () { relock(''); };
+
+  // ---------- 버튼들 ----------
+  $('phone').oninput = function () { onlyDigits(this); clearResult(); updateAddBtn(); };
+  $('phone').onkeydown = function (e) { if (e.key === 'Enter') $('addBtn').click(); };
+
+  function phone4() {
+    var v = $('phone').value;
+    if (!/^\d{4}$/.test(v)) { say('숫자 4개를 넣어 주세요.', true); return null; }
+    return v;
+  }
+  $('addBtn').onclick = function () {
+    var v = phone4(); if (!v || busy) return;
+    send({ action: 'add', pin: pin, last4: v }, '적립했어요! ✅');
+  };
+  $('undoBtn').onclick = function () {
+    var v = phone4(); if (!v || busy) return;
+    send({ action: 'undo', pin: pin, last4: v }, '1개 뺐어요. ↩');
+  };
+  $('peekBtn').onclick = function () {
+    var v = phone4(); if (!v || busy) return;
+    send({ action: 'lookup', last4: v }, '', null);
+  };
+  $('doneBtn').onclick = function () {
+    if (busy || !shownLast4) return;
+    if (!confirm('뒷자리 ' + shownLast4 + ' 손님의 스탬프를 0개로 되돌릴까요? 무료 음료를 드린 뒤에만 눌러 주세요.')) return;
+    send({ action: 'redeem', pin: pin, last4: shownLast4 }, '사용 완료! 0개로 돌아갔어요. 🎉');
+  };
+  $('changePin').onclick = function () {
+    if (busy) return;
+    var v = prompt('새 비밀번호 숫자 4자리를 넣어 주세요.');
+    if (v === null) return;
+    if (!/^\d{4}$/.test(v)) { $('pinChangeMsg').textContent = '숫자 4개만 가능해요. 바뀌지 않았어요.'; return; }
+    setBusy(true); $('pinChangeMsg').textContent = '바꾸는 중이에요…';
+    api({ action: 'setpin', pin: pin, newPin: v }).then(function (res) {
+      if (res && res.ok) { pin = v; $('pinChangeMsg').textContent = '비밀번호를 바꿨어요!'; }
+      else $('pinChangeMsg').textContent = '바꾸지 못했어요. 다시 해 주세요.';
+    }, function () {
+      $('pinChangeMsg').textContent = '인터넷이 불안정해요. 바뀌었는지 모르니 새 비밀번호와 옛 비밀번호를 모두 시도해 보세요.';
+    }).then(function () { setBusy(false); });
+  };
+})();
+</script>
+</body>
+</html>

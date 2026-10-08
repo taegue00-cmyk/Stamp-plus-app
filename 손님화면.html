@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>브릿지 스탬프 - 단골 적립</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; justify-content: center;
+    font-family: 'Gowun Dodum', '고운 돋움', 'Malgun Gothic', '맑은 고딕', sans-serif;
+    color: #3b2f4a;
+    background: linear-gradient(135deg, #ffd6e0 0%, #ffe9c7 45%, #c9e7ff 100%) fixed;
+  }
+  .app { width: 100%; max-width: 440px; padding: 28px 16px 40px; }
+  .shop { text-align: center; font-size: 28px; font-weight: bold; margin: 0; }
+  .guide { text-align: center; font-size: 15px; opacity: .75; margin: 6px 0 20px; }
+  .card {
+    background: rgba(255,255,255,.45);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,.7);
+    border-radius: 24px; padding: 20px; margin-bottom: 14px;
+    box-shadow: 0 8px 28px rgba(120,90,160,.18);
+  }
+  label { display: block; font-size: 15px; margin: 0 0 8px 4px; }
+  input {
+    width: 100%; padding: 14px; font: inherit; font-size: 20px; letter-spacing: 6px; text-align: center;
+    color: inherit; border: 1px solid rgba(255,255,255,.8); border-radius: 16px;
+    background: rgba(255,255,255,.65); outline: none; margin-bottom: 12px;
+  }
+  input:focus { box-shadow: 0 0 0 3px rgba(255,140,170,.4); }
+  .btn {
+    width: 100%; padding: 14px; font: inherit; font-size: 18px; color: #fff; cursor: pointer;
+    border: none; border-radius: 18px;
+    background: linear-gradient(135deg, #ff8fb1, #ffb27a);
+    box-shadow: 0 6px 16px rgba(255,120,150,.35);
+  }
+  .msg { text-align: center; font-size: 15px; margin-top: 10px; min-height: 20px; }
+  .count { text-align: center; font-size: 17px; margin-bottom: 14px; }
+  .row { display: flex; gap: 4px; justify-content: space-between; }
+  .dot {
+    flex: 1; aspect-ratio: 1; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.55); border: 2px dashed rgba(180,150,200,.6);
+    font-size: 11px; color: rgba(90,70,110,.5);
+  }
+  .dot.full {
+    border: 2px solid #fff; color: #fff; font-size: 15px;
+    background: linear-gradient(135deg, #ff8fb1, #ffb27a);
+    box-shadow: 0 3px 8px rgba(255,120,150,.4);
+  }
+  .note { text-align: center; font-size: 17px; margin-top: 16px; line-height: 1.5; }
+  .hidden { display: none !important; }
+
+  /* 축하 화면 */
+  .party {
+    position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center;
+    padding: 24px; background: rgba(60,40,80,.45);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    overflow: hidden;
+  }
+  .party-card {
+    position: relative; z-index: 2; width: 100%; max-width: 360px; text-align: center;
+    background: rgba(255,255,255,.85); border: 1px solid #fff; border-radius: 28px; padding: 30px 22px;
+    box-shadow: 0 16px 40px rgba(60,40,80,.35);
+    animation: pop .5s ease-out;
+  }
+  .party-card .big { font-size: 56px; }
+  .party-card h2 { margin: 8px 0; font-size: 26px; }
+  .party-card p { margin: 6px 0 18px; font-size: 17px; line-height: 1.5; }
+  .confetti { position: absolute; top: -40px; font-size: 24px; animation: fall linear infinite; z-index: 3; pointer-events: none; }
+  .confetti.paper { border-radius: 2px; }
+  @keyframes fall { to { transform: translateY(115vh) rotate(720deg); } }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1 class="shop">🌸 브릿지 스탬프</h1>
+  <div class="guide">단골 적립 · 스탬프를 모으면 무료 음료가 와요!</div>
+
+  <div class="card">
+    <label for="phone">휴대폰 번호 뒷 4자리</label>
+    <input id="phone" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+    <button class="btn" id="okBtn">확인</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="card hidden" id="result">
+    <div class="count" id="count"></div>
+    <div class="row" id="row"></div>
+    <div class="note" id="note"></div>
+  </div>
+</div>
+
+<div class="party hidden" id="party">
+  <div class="party-card">
+    <div class="big">🎉</div>
+    <h2>축하해요!</h2>
+    <p>스탬프 10개를 모두 모았어요!<br>정말 멋진 단골 손님이세요 💖<br><b>무료 음료</b> 1잔을 받아 가세요 🥤</p>
+    <button class="btn" id="closeParty">고마워요!</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var GOAL = 10;
+  // 지금은 저장 기능이 없어서, 화면을 확인해 볼 수 있는 예시 손님만 넣어 뒀어요.
+  var SAMPLE = { '1234': 3, '5678': 7, '9999': 10 };
+
+  function $(id) { return document.getElementById(id); }
+
+  $('phone').oninput = function () { this.value = this.value.replace(/\D/g, '').slice(0, 4); };
+  $('phone').onkeydown = function (e) { if (e.key === 'Enter') $('okBtn').click(); };
+
+  $('okBtn').onclick = function () {
+    var v = $('phone').value;
+    $('msg').textContent = '';
+    $('result').classList.add('hidden');
+    if (!/^\d{4}$/.test(v)) { $('msg').textContent = '숫자 4개를 넣어 주세요.'; return; }
+    var n = SAMPLE.hasOwnProperty(v) ? SAMPLE[v] : 0;
+    show(n);
+  };
+
+  function show(n) {
+    var row = $('row');
+    row.textContent = '';
+    for (var i = 1; i <= GOAL; i++) {
+      var d = document.createElement('div');
+      d.className = 'dot' + (i <= n ? ' full' : '');
+      d.textContent = i <= n ? '★' : String(i);
+      row.appendChild(d);
+    }
+    $('count').textContent = '지금까지 ' + n + ' / ' + GOAL + '개';
+    if (n >= GOAL) {
+      $('note').textContent = '🎁 10개를 다 모았어요! 무료 음료를 받으세요.';
+      openParty();
+    } else if (n === 0) {
+      $('note').textContent = '아직 모은 스탬프가 없어요. ' + GOAL + '개를 모으면 무료 음료!';
+    } else {
+      $('note').textContent = n + '개 모았어요! ' + (GOAL - n) + '개 더 모으면 무료 음료';
+    }
+    $('result').classList.remove('hidden');
+  }
+
+  function openParty() {
+    var p = $('party');
+    var old = p.querySelectorAll('.confetti');
+    for (var k = 0; k < old.length; k++) old[k].remove();
+    var emojis = ['🎉', '✨', '🌸', '⭐', '🎊', '💖'];
+    var colors = ['#ff8fb1', '#ffb27a', '#ffe066', '#7fd8be', '#8ec5ff', '#c9a7ff'];
+    for (var i = 0; i < 110; i++) {
+      var c = document.createElement('span');
+      if (i % 3 === 0) {
+        c.className = 'confetti';
+        c.textContent = emojis[i % emojis.length];
+        c.style.fontSize = (18 + Math.random() * 18) + 'px';
+      } else {
+        c.className = 'confetti paper';
+        c.style.background = colors[i % colors.length];
+        c.style.width = (6 + Math.random() * 8) + 'px';
+        c.style.height = (10 + Math.random() * 10) + 'px';
+      }
+      c.style.left = (Math.random() * 100) + '%';
+      c.style.animationDuration = (2.5 + Math.random() * 3) + 's';
+      c.style.animationDelay = (-Math.random() * 5) + 's';
+      p.appendChild(c);
+    }
+    p.classList.remove('hidden');
+  }
+  $('closeParty').onclick = function () { $('party').classList.add('hidden'); };
+})();
+</script>
+</body>
+</html>
